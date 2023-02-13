@@ -36,8 +36,9 @@ jobs:
         run: |
           mvn clean package -DskipTests
           # Docker build push
-          docker build -t 348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app:latest -f ./Dockerfile .
-          docker push 348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app:${{ steps.short-sha.outputs.sha }}
+          SHORT_SHA=${{ steps.short-sha.outputs.sha }}
+          docker build -t 348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app:$SHORT_SHA -f ./Dockerfile .
+          docker push 348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app:$SHORT_SHA
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
