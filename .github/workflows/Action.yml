@@ -16,6 +16,8 @@ jobs:
         with:
           distribution: "adopt"
           java-version: "17"
+      - uses: benjlevesque/short-sha@v1.2
+        id: short-sha
       - name: App Test
         run: |
           mvn clean test
@@ -35,7 +37,7 @@ jobs:
           mvn clean package -DskipTests
           # Docker build push
           docker build -t 348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app:latest -f ./Dockerfile .
-          docker push 348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app:latest
+          docker push 348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app:${{ steps.short-sha.outputs.sha }}
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
@@ -59,11 +61,11 @@ jobs:
         run: |
           current_datetime=$(date '+%Y%m%d%H%M%S')
           yq e --inplace ".podAnnotations.\"timestamp\" = \"$current_datetime\"" ./values.yaml
-          yq e --inplace ".image.repository = \"IMAGE=348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app\"" ./values.yaml
-          yq e --inplace ".image.tag = \"latest\"" ./values.yaml
+          yq e --inplace ".image.repository = \"348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app\"" ./values.yaml
+          yq e --inplace ".image.tag = \"${{ steps.short-sha.outputs.sha }}\"" ./values.yaml
           
           git config user.name 'chiseok.song'
           git config user.email 'chiseok.song@bespinglobal.com'
           git add -u
-          git commit -m "Update Image Version"
+          git commit -m "Update Image Version ${{ steps.short-sha.outputs.sha }}"
           git push origin ${{ github.ref_name }}
