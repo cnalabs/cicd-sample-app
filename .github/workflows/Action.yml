@@ -58,9 +58,9 @@ jobs:
         shell: bash
         run: |
           current_datetime=$(date '+%Y%m%d%H%M%S')
-          IMAGE=348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app:latest
-          yq e --inplace ".spec.template.metadata.annotations.\"timestamp\" = \"$current_datetime\"" ./templates/deployment.yaml
-          yq e --inplace ".spec.template.spec.containers[0].image = \"$IMAGE\"" ./templates/deployment.yaml
+          yq e --inplace ".podAnnotations.\"timestamp\" = \"$current_datetime\"" ./values.yaml
+          yq e --inplace ".image.repository = \"IMAGE=348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app\"" ./values.yaml
+          yq e --inplace ".image.tag = \"latest\"" ./values.yaml
           
           git config user.name 'chiseok.song'
           git config user.email 'chiseok.song@bespinglobal.com'
