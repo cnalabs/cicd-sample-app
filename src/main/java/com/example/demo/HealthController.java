@@ -19,4 +19,9 @@ public class HealthController {
         map.put("status", "ok");
         return new ResponseEntity(map, HttpStatus.OK);
     }
+
+    @GetMapping(value = "/hello")
+    public ResponseEntity hello(){
+        return new ResponseEntity("Hello, World", HttpStatus.OK);
+    }
 }
