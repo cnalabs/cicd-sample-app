@@ -16,6 +16,7 @@ jobs:
         with:
           distribution: "adopt"
           java-version: "17"
+          cache: 'maven'
       - uses: benjlevesque/short-sha@v1.2
         id: short-sha
       - name: App Test
@@ -39,12 +40,6 @@ jobs:
           SHORT_SHA=${{ steps.short-sha.outputs.sha }}
           docker build -t 348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app:$SHORT_SHA -f ./Dockerfile .
           docker push 348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app:$SHORT_SHA
-      - name: Cache Maven packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
       - name: Checkout Sample Helm
         uses: actions/checkout@v2
         with:
