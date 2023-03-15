@@ -63,11 +63,11 @@ jobs:
       - docker/build:
           image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME 
           dockerfile: ./deploy/Dockerfile 
-          tag: ${CIRCLE_SHA1:0:7}
+          tag: $(echo $CIRCLE_SHA1 | cut -c -7)
 
       - docker/push:
           image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME  
-          tag: ${CIRCLE_SHA1:0:7}
+          tag: $(echo $CIRCLE_SHA1 | cut -c -7)
 
   ManifestDeploy:
     machine: true
@@ -90,7 +90,7 @@ jobs:
             V_TIMESTAMP=$(date +%s)
             yq e --inplace ".timestamp = \"$V_TIMESTAMP\"" values.yaml
             yq e --inplace ".imageRepo = \"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME\"" values.yaml
-            yq e --inplace ".imageTag = \"${CIRCLE_SHA1:0:7}\"" values.yaml
+            yq e --inplace ".imageTag = \"$(echo $CIRCLE_SHA1 | cut -c -7)\"" values.yaml
             
             git config user.email "misoboy.kor@gmail.com"
             git config user.name "misoboy.kor"
