@@ -4,7 +4,7 @@ defaults:
     AWS_REGION: ap-northeast-2
 
 jobs:
-  build_test:
+  BuildAndTest:
     docker:
       - image: cimg/openjdk:17.0
     steps:
@@ -40,8 +40,9 @@ jobs:
           paths:
             - deploy
 
-  build_docker:
-    machine: true
+  DockerBuild:
+    docker:
+      - image: docker:latest
     steps:
       - attach_workspace:
           at: /home/circleci/project
@@ -65,7 +66,7 @@ jobs:
             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
             docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME:$TAG
 
-  manifest_deploy:
+  ManifestDeploy:
     docker:
       - image: ubuntu:latest
     steps:
@@ -105,21 +106,21 @@ workflows:
   version: 2
   workflow:
     jobs:
-      - build_test:
+      - BuildAndTest:
           filters:
             branches:
               only: main
-      - build_docker:
+      - DockerBuild:
           context: GITHUB_SECRET
           requires:
-            - build_test
+            - BuildAndTest
           filters:
             branches:
               only: main
-      - manifest_deploy:
+      - ManifestDeploy:
           context: GITHUB_SECRET
           requires:
-            - build_docker
+            - DockerBuild
           filters:
             branches:
               only: main
