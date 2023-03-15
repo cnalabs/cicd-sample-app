@@ -2,7 +2,6 @@ version: 2.1
 defaults:
   envrionments:
     APP_NAME: cicd-sample-app
-    AWS_ACCOUNT_ID:
 
 orbs:
   aws-cli: circleci/aws-cli@2.0.3
@@ -59,25 +58,16 @@ jobs:
           override-installed: false 
           disable-aws-pager: true 
 
-      - run:
-          name: Set Local Envrionments
-          command: |
-            export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --region $AWS_REGION --query 'Account' --output text)
-            export V_BRANCH=$(echo $CIRCLE_BRANCH | awk -F\/ '{print $1}')
-            echo "Branch: $V_BRANCH"
-            export TAG=${CIRCLE_SHA1:0:7}
-
-      - aws-ecr/ecr-login:
-          registry-id: ${AWS_ACCOUNT_ID}
+      - aws-ecr/ecr-login
 
       - docker/build:
           image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME 
           dockerfile: ./deploy/Dockerfile 
-          tag: $TAG
+          tag: ${CIRCLE_SHA1:0:7}
 
       - docker/push:
           image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME  
-          tag: $TAG 
+          tag: ${CIRCLE_SHA1:0:7}
 
   ManifestDeploy:
     machine: true
@@ -91,12 +81,6 @@ jobs:
           arch: amd64 
 
       - run:
-          name: Set Local Envrionments
-          command: |
-            export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --region $AWS_REGION --query 'Account' --output text)
-            export TAG=${CIRCLE_SHA1:0:7}
-
-      - run:
           name: Manifest Deploy
           command: |
             echo "Argo Workflow call process..."
@@ -106,7 +90,7 @@ jobs:
             V_TIMESTAMP=$(date +%s)
             yq e --inplace ".timestamp = \"$V_TIMESTAMP\"" values.yaml
             yq e --inplace ".imageRepo = \"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME\"" values.yaml
-            yq e --inplace ".imageTag = \"$TAG\"" values.yaml
+            yq e --inplace ".imageTag = \"${CIRCLE_SHA1:0:7}\"" values.yaml
             
             git config user.email "misoboy.kor@gmail.com"
             git config user.name "misoboy.kor"
