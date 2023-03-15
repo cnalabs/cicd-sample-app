@@ -61,12 +61,12 @@ jobs:
       - aws-ecr/ecr-login
 
       - docker/build:
-          image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME 
+          image: $APP_NAME
           dockerfile: ./deploy/Dockerfile 
           tag: $(echo $CIRCLE_SHA1 | cut -c -7)
 
       - docker/push:
-          image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME  
+          image: $APP_NAME
           tag: $(echo $CIRCLE_SHA1 | cut -c -7)
 
   ManifestDeploy:
