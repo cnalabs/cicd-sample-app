@@ -1,6 +1,7 @@
 version: 2
 defaults:
   environment:
+    AWS_REGION: ap-northeast-2
 
 jobs:
   build_test:
