@@ -1,0 +1,124 @@
+version: 2
+defaults:
+  environment:
+
+jobs:
+  build_test:
+    docker:
+      - image: circleci/openjdk:17-jdk
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /home/circleci
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "pom.xml" }}
+
+      - run:
+          name : Maven Test
+          command : |
+            chmod +x mvnw
+            ./mvnw -e clean test
+
+      - run:
+          name : Maven Build
+          command : |
+            chmod +x mvnw
+            ./mvnw -e clean package -DskipTests
+            mkdir deploy
+            cp ./target/*.jar ./deploy
+            cp ./docker/* ./deploy
+
+      - save_cache:
+          paths:
+            - ~/.mvn
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+
+      - persist_to_workspace:
+          root: /home/circleci/project
+          paths:
+            - deploy
+
+  build_docker:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: /home/circleci/project
+
+      - run:
+          name: Docker Build & Deploy
+          command: |
+            apk add --no-cache curl jq python3 py3-pip
+            pip install awscli
+            
+            export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --region $AWS_REGION --query 'Account' --output text)
+            export V_BRANCH=$(echo $CIRCLE_BRANCH | awk -F\/ '{print $1}')
+            echo "Branch: $V_BRANCH"
+            export TAG=${CIRCLE_SHA1:0:7}
+            
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+            
+            # Docker build
+            docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME:$TAG -f Dockerfile .
+            # Docker Login & Push
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+            docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME:$TAG
+
+  manifest_deploy:
+    docker:
+      - image: ubuntu:latest
+    steps:
+      - run:
+          name: Manifest Deploy
+          command: |
+            apt-get update -y
+            apt-get install -y docker unzip git curl
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            ./aws/install
+            
+            curl -sSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+            chmod +x /usr/local/bin/yq
+            
+            export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --region $AWS_REGION --query 'Account' --output text)
+            export V_BRANCH=$(echo $CIRCLE_BRANCH | awk -F\/ '{print $1}')
+            echo "Branch: $V_BRANCH"
+            export TAG=${CIRCLE_SHA1:0:7}
+
+            echo "Argo Workflow call process..."
+            git clone -b main https://misoboy:${GITHUB_TOKEN}@github.com/cnalabs/cicd-sample-helm.git /tmp/helm
+            cd /tmp/helm
+            
+            V_TIMESTAMP=$(date +%s)
+            yq e --inplace ".timestamp = \"$V_TIMESTAMP\"" values.yaml
+            yq e --inplace ".imageRepo = \"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME\"" values.yaml
+            yq e --inplace ".imageTag = \"$TAG\"" values.yaml
+            
+            git config user.email "misoboy.kor@gmail.com"
+            git config user.name "misoboy.kor"
+            git add -u
+            git commit -m "Update Image Tag: $APP_NAME:$TAG"
+            git push origin main
+
+workflows:
+  version: 2
+  workflow:
+    jobs:
+      - build_test:
+          filters:
+            branches:
+              only: main
+      - build_docker:
+          context: GITHUB_SECRET
+          requires:
+            - build_test
+          filters:
+            branches:
+              only: main
+      - manifest_deploy:
+          context: GITHUB_SECRET
+          requires:
+            - build_docker
+          filters:
+            branches:
+              only: main
