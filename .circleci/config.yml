@@ -93,7 +93,7 @@ jobs:
             git config user.email "misoboy.kor@gmail.com"
             git config user.name "misoboy.kor"
             git add -u
-            git commit -m "Update Image Tag: << pipeline.parameters.APP_NAME >>:$TAG"
+            git commit -m "Update Image Tag: << pipeline.parameters.APP_NAME >>:$(echo $CIRCLE_SHA1 | cut -c -7)"
             git push origin main
 
 workflows:
