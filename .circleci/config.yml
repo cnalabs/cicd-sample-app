@@ -1,6 +1,6 @@
 version: 2.1
 defaults:
-  envrionments:
+  environment:
     APP_NAME: cicd-sample-app
 
 orbs:
