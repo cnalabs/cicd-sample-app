@@ -67,10 +67,7 @@ jobs:
             export TAG=${CIRCLE_SHA1:0:7}
 
       - aws-ecr/ecr-login:
-          registry-id: $AWS_ACCOUNT_ID 
-          region: $AWS_REGION 
-          aws-secret-access-key: $AWS_SECRET_ACCESS_KEY 
-          aws-access-key-id: $AWS_ACCESS_KEY_ID 
+          registry-id: $AWS_ACCOUNT_ID
 
       - docker/build:
           image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME 
