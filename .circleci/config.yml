@@ -75,12 +75,12 @@ jobs:
           override-installed: false
           disable-aws-pager: true
 
-      - rnikkei-yq/install:
-          arch: amd64
-
       - run:
           name: Manifest Deploy
           command: |
+            curl -sSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+            chmod +x /usr/local/bin/yq
+
             echo "Argo Workflow call process..."
             git clone -b main https://misoboy:${GITHUB_TOKEN}@github.com/cnalabs/cicd-sample-helm.git /tmp/helm
             cd /tmp/helm
