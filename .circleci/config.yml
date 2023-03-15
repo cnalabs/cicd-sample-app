@@ -1,7 +1,9 @@
 version: 2.1
 
 parameters:
-  APP_NAME: cicd-sample-app
+  APP_NAME:
+    type: string
+    default: "cicd-sample-app"
 
 orbs:
   aws-cli: circleci/aws-cli@2.0.3
