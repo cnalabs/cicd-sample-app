@@ -6,7 +6,7 @@ defaults:
 jobs:
   build_test:
     docker:
-      - image: circleci/openjdk:17-jdk
+      - image: cimg/openjdk::17.0
     steps:
       - checkout
       - attach_workspace:
