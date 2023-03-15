@@ -1,6 +1,6 @@
 version: 2.1
 defaults:
-  environment:
+  environments:
     APP_NAME: cicd-sample-app
 
 orbs:
@@ -55,29 +55,29 @@ jobs:
           at: /home/circleci/project
 
       - aws-cli/install:
-          override-installed: false 
-          disable-aws-pager: true 
+          override-installed: false
+          disable-aws-pager: true
 
       - aws-ecr/ecr-login
 
       - aws-ecr/build-and-push-image:
           checkout: false
-          docker-login: false 
-          dockerfile: ./deploy/Dockerfile  
-          push-image: true 
-          repo: $APP_NAME 
-          tag: $(echo $CIRCLE_SHA1 | cut -c -7) 
+          docker-login: false
+          dockerfile: ./deploy/Dockerfile
+          push-image: true
+          repo: $APP_NAME
+          tag: $(echo $CIRCLE_SHA1 | cut -c -7)
 
   ManifestDeploy:
     machine: true
     steps:
       - jq/install
       - aws-cli/install:
-          override-installed: false 
-          disable-aws-pager: true 
+          override-installed: false
+          disable-aws-pager: true
 
       - rnikkei-yq/install:
-          arch: amd64 
+          arch: amd64
 
       - run:
           name: Manifest Deploy
