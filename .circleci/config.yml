@@ -60,14 +60,12 @@ jobs:
 
       - aws-ecr/ecr-login
 
-      - docker/build:
-          image: $APP_NAME
-          dockerfile: ./deploy/Dockerfile 
-          tag: $(echo $CIRCLE_SHA1 | cut -c -7)
-
-      - docker/push:
-          image: $APP_NAME
-          tag: $(echo $CIRCLE_SHA1 | cut -c -7)
+      - aws-ecr/build-and-push-image:
+          docker-login: false 
+          dockerfile: ./deploy/Dockerfile  
+          push-image: true 
+          repo: $APP_NAME 
+          tag: $(echo $CIRCLE_SHA1 | cut -c -7) 
 
   ManifestDeploy:
     machine: true
