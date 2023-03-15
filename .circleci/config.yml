@@ -1,7 +1,7 @@
 version: 2.1
-defaults:
-  environments:
-    APP_NAME: cicd-sample-app
+
+parameters:
+  APP_NAME: cicd-sample-app
 
 orbs:
   aws-cli: circleci/aws-cli@2.0.3
@@ -65,7 +65,7 @@ jobs:
           docker-login: false
           dockerfile: ./deploy/Dockerfile
           push-image: true
-          repo: $APP_NAME
+          repo: << pipeline.parameters.APP_NAME >>
           tag: $(echo $CIRCLE_SHA1 | cut -c -7)
 
   ManifestDeploy:
@@ -88,13 +88,13 @@ jobs:
             
             V_TIMESTAMP=$(date +%s)
             yq e --inplace ".timestamp = \"$V_TIMESTAMP\"" values.yaml
-            yq e --inplace ".imageRepo = \"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME\"" values.yaml
+            yq e --inplace ".imageRepo = \"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/<< pipeline.parameters.APP_NAME >>\"" values.yaml
             yq e --inplace ".imageTag = \"$(echo $CIRCLE_SHA1 | cut -c -7)\"" values.yaml
             
             git config user.email "misoboy.kor@gmail.com"
             git config user.name "misoboy.kor"
             git add -u
-            git commit -m "Update Image Tag: $APP_NAME:$TAG"
+            git commit -m "Update Image Tag: << pipeline.parameters.APP_NAME >>:$TAG"
             git push origin main
 
 workflows:
