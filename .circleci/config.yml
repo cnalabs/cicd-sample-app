@@ -35,9 +35,6 @@ jobs:
           command : |
             chmod +x mvnw
             ./mvnw -e clean package -DskipTests
-            mkdir deploy
-            cp ./target/*.jar ./deploy
-            cp ./Dockerfile ./deploy
 
       - save_cache:
           paths:
@@ -47,7 +44,7 @@ jobs:
       - persist_to_workspace:
           root: /home/circleci/project
           paths:
-            - deploy
+            - .
 
 
   DockerBuild:
@@ -65,7 +62,7 @@ jobs:
       - aws-ecr/build-and-push-image:
           checkout: false
           docker-login: false
-          dockerfile: ./deploy/Dockerfile
+          dockerfile: Dockerfile
           push-image: true
           repo: << pipeline.parameters.APP_NAME >>
           tag: $(echo $CIRCLE_SHA1 | cut -c -7)
