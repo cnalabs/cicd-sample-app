@@ -40,6 +40,7 @@ jobs:
   DockerBuild:
     docker:
       - image: docker:latest
+    machine: true
     steps:
       - attach_workspace:
           at: /home/circleci/project
@@ -66,6 +67,7 @@ jobs:
   ManifestDeploy:
     docker:
       - image: ubuntu:latest
+    machine: true
     steps:
       - run:
           name: Manifest Deploy
