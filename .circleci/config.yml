@@ -100,7 +100,7 @@ jobs:
       steps:
         - jq/install
         - run:
-            name: Manifest Deploy
+            name: Call Argo Workflow
             command: |
               curl --location 'https://webhook.slabs.kr/trigger' \
               --header 'Content-Type: application/json' \
@@ -130,6 +130,13 @@ workflows:
           context: GITHUB_SECRET
           requires:
             - DockerBuild
+          filters:
+            branches:
+              only: main
+      - ArgoWorkflow:
+          context: GITHUB_SECRET
+          requires:
+            - ManifestDeploy
           filters:
             branches:
               only: main
