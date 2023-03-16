@@ -97,6 +97,7 @@ jobs:
             git push origin main
 
   ArgoWorkflow:
+    machine: true
     steps:
       - jq/install
       - run:
