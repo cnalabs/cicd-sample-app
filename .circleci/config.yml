@@ -96,20 +96,20 @@ jobs:
             git commit -m "Update Image Tag: << pipeline.parameters.APP_NAME >>:$(echo $CIRCLE_SHA1 | cut -c -7)"
             git push origin main
 
-    ArgoWorkflow:
-      steps:
-        - jq/install
-        - run:
-            name: Call Argo Workflow
-            command: |
-              curl --location 'https://webhook.slabs.kr/trigger' \
-              --header 'Content-Type: application/json' \
-                --data-raw '{
-                "pusher": {
-                  "name": "misoboy",
-                  "email": "misoboy.kor@gmail.com"
-                }
-              }'
+  ArgoWorkflow:
+    steps:
+      - jq/install
+      - run:
+          name: Call Argo Workflow
+          command: |
+            curl --location 'https://webhook.slabs.kr/trigger' \
+            --header 'Content-Type: application/json' \
+              --data-raw '{
+              "pusher": {
+                "name": "misoboy",
+                "email": "misoboy.kor@gmail.com"
+              }
+            }'
 
 workflows:
   version: 2
