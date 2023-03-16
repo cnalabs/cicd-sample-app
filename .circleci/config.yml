@@ -87,8 +87,8 @@ jobs:
             
             V_TIMESTAMP=$(date +%s)
             yq e --inplace ".timestamp = \"$V_TIMESTAMP\"" values.yaml
-            yq e --inplace ".imageRepo = \"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/<< pipeline.parameters.APP_NAME >>\"" values.yaml
-            yq e --inplace ".imageTag = \"$(echo $CIRCLE_SHA1 | cut -c -7)\"" values.yaml
+            yq e --inplace ".image.repository = \"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/<< pipeline.parameters.APP_NAME >>\"" values.yaml
+            yq e --inplace ".image.tag = \"$(echo $CIRCLE_SHA1 | cut -c -7)\"" values.yaml
             
             git config user.email "misoboy.kor@gmail.com"
             git config user.name "misoboy.kor"
