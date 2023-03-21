@@ -1,0 +1,85 @@
+language: java
+sudo: true
+jdk:
+  - openjdk17
+
+services:
+  - docker
+
+branched:
+  only:
+    - main
+
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - '$HOME/.gradle'
+    - '$HOME/docker'
+
+env:
+  global:
+    - STABLE_TAG: 2.0
+    - SPRING_PROFILES_ACTIVE: dev
+    - APP_NAME: "cicd-sample-app"
+
+install: true
+addons:
+  artifacts:
+    working_dir: out
+  s3_region: ap-northeast-2
+
+before_install:
+  - chmod +x mvnw
+
+jobs:
+  include:
+    - stage: Maven Test
+      script: |
+        ./mvnw clean test
+
+    - stage: Maven Build
+      script: |
+        ./mvnw clean package -DskipTests
+        mv ./target ./out
+        cp ./Dockerfile ./out
+
+    - stage: Docker Build & Deploy
+      script: |
+        pip install --user awscli
+        aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 348951190761.dkr.ecr.ap-northeast-2.amazonaws.com
+        TAG="$(echo $TRAVIS_COMMIT | cut -c -7)"
+        TAGGED_IMAGE="348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/cicd-sample-app"
+        IMAGE="${TAGGED_IMAGE}:${TAG}"
+        echo 'image:' $IMAGE
+        docker build -t "$IMAGE" .
+        docker push "${IMAGE}"
+
+    - stage: Manifest Deploy
+      script: |
+        curl -sSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+        chmod +x /usr/local/bin/yq
+
+        git clone -b main https://misoboy:${GITHUB_TOKEN}@github.com/cnalabs/cicd-sample-helm.git /tmp/helm
+        cd /tmp/helm
+    
+        V_TIMESTAMP=$(date +%s)
+        yq e --inplace ".timestamp = \"$V_TIMESTAMP\"" values.yaml
+        yq e --inplace ".image.repository = \"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME\"" values.yaml
+        yq e --inplace ".image.tag = \"$(echo $TRAVIS_COMMIT | cut -c -7)\"" values.yaml
+    
+        git config user.email "misoboy.kor@gmail.com"
+        git config user.name "misoboy.kor"
+        git add -u
+        git commit -m "Update Image Tag: $$APP_NAME:$(echo $TRAVIS_COMMIT | cut -c -7)"
+        git push origin main
+
+    - stage: Call Tekton Pipeline
+      script: |
+        curl --location 'https://event.slabs.kr' \
+            --header 'Content-Type: application/json' \
+              --data-raw '{
+              "repository": {
+                "url": "https://github.com/cnalabs/cicd-sample-helm.git",
+                "revision": "main"
+              }
+            }'
