@@ -23,7 +23,7 @@ env:
 addons:
   artifacts:
     working_dir: out
-    s3_region: ap-northeast-2
+  s3_region: "ap-northeast-2"
 
 jobs:
   include:
