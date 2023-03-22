@@ -1,14 +1,6 @@
 language: java
 sudo: true
 jdk: openjdk10
-script:
-  - jdk_switcher use openjdk10
-  - # do stuff with OpenJDK 10
-  - wget https://github.com/sormuras/bach/raw/master/install-jdk.sh
-  - chmod +x $TRAVIS_BUILD_DIR/install-jdk.sh
-  - export JAVA_HOME=$HOME/openjdk17
-  - $TRAVIS_BUILD_DIR/install-jdk.sh -F 17 --target $JAVA_HOME
-  - # do stuff with open OpenJDK 11
 
 services:
   - docker
@@ -34,6 +26,7 @@ addons:
   s3_region: ap-northeast-2
 
 before_install:
+  - ls -al
   - chmod +x mvnw
 
 jobs:
@@ -81,10 +74,14 @@ jobs:
     - stage: Call Tekton Pipeline
       script: |
         curl --location 'https://event.slabs.kr' \
-            --header 'Content-Type: application/json' \
-              --data-raw '{
-              "repository": {
-                "url": "https://github.com/cnalabs/cicd-sample-helm.git",
-                "revision": "main"
-              }
-            }'
+          --header 'Content-Type: application/json' \
+            --data '{
+          "app-repository": {
+            "url": "https://github.com/cnalabs/cicd-sample-app.git",
+            "revision": "main"
+          },
+          "helm-repository": {
+            "url": "https://github.com/cnalabs/cicd-sample-helm.git",
+            "revision": "main"
+          }
+        }'
