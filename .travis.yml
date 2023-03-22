@@ -2,6 +2,10 @@ language: java
 sudo: true
 install: true
 
+before_install: |
+  # install awscli v2 if not available
+  if ! [ -x "$(command -v aws)" ]; then curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" ; unzip awscliv2.zip ; sudo ./aws/install ; fi
+
 services:
   - docker
 
@@ -18,12 +22,8 @@ cache:
 env:
   global:
     - APP_NAME: "cicd-sample-app"
-    - WORK_DIR: ./out
-
-addons:
-  artifacts:
-    working_dir: out
-  s3_region: "ap-northeast-2"
+    - S3_BUCKET: "sample-travisci-artifact"
+    - WORK_DIR: out
 
 jobs:
   include:
@@ -31,19 +31,23 @@ jobs:
       jdk: openjdk17
       script: |
         mvn clean test
+        
 
     - stage: Maven Build
       jdk: openjdk17
       script: |
         mvn clean package -DskipTests
+        mkdir $WORK_DIR
         mv ./target $WORK_DIR
         cp ./Dockerfile $WORK_DIR
+      after_script: |
+        aws s3 sync $WORK_DIR s3://$S3_BUCKET/$TRAVIS_BUILD_ID/$WORK_DIR
 
     - stage: Docker Build & Deploy
       before_script: |
+        aws s3 sync s3://$S3_BUCKET/$TRAVIS_BUILD_ID/$WORK_DIR $WORK_DIR
         cd $WORK_DIR
       script: |
-        pip install --user awscli
         aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 348951190761.dkr.ecr.ap-northeast-2.amazonaws.com
         TAG="$(echo $TRAVIS_COMMIT | cut -c -7)"
         TAGGED_IMAGE="348951190761.dkr.ecr.ap-northeast-2.amazonaws.com/$APP_NAME"
