@@ -31,7 +31,6 @@ jobs:
       jdk: openjdk17
       script: |
         mvn clean test
-        
 
     - stage: Maven Build
       jdk: openjdk17
@@ -58,16 +57,16 @@ jobs:
 
     - stage: Manifest Deploy
       script: |
-        curl -sSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-        chmod +x /usr/local/bin/yq
+        curl -sSL -o ./yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+        chmod +x ./yq
 
         git clone -b main https://misoboy:${GITHUB_TOKEN}@github.com/cnalabs/cicd-sample-helm.git /tmp/helm
         cd /tmp/helm
     
         V_TIMESTAMP=$(date +%s)
-        yq e --inplace ".timestamp = \"$V_TIMESTAMP\"" values.yaml
-        yq e --inplace ".image.repository = \"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME\"" values.yaml
-        yq e --inplace ".image.tag = \"$(echo $TRAVIS_COMMIT | cut -c -7)\"" values.yaml
+        ./yq e --inplace ".timestamp = \"$V_TIMESTAMP\"" values.yaml
+        ./yq e --inplace ".image.repository = \"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP_NAME\"" values.yaml
+        ./yq e --inplace ".image.tag = \"$(echo $TRAVIS_COMMIT | cut -c -7)\"" values.yaml
     
         git config user.email "misoboy.kor@gmail.com"
         git config user.name "misoboy.kor"
