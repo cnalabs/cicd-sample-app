@@ -1,6 +1,8 @@
 language: java
 sudo: true
-jdk: openjdk10
+jdk:
+  - openjdk11
+install: true
 
 services:
   - docker
@@ -19,7 +21,6 @@ env:
   global:
     - APP_NAME: "cicd-sample-app"
 
-install: true
 addons:
   artifacts:
     working_dir: out
