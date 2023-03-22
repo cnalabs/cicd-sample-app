@@ -13,7 +13,7 @@ branched:
 
 cache:
   directories:
-    - '$HOME/.m2/repository'
+    - '$HOME/.m2'
     - '$HOME/.gradle'
     - '$HOME/docker'
 
@@ -24,7 +24,7 @@ env:
 addons:
   artifacts:
     working_dir: out
-  s3_region: ap-northeast-2
+    s3_region: ap-northeast-2
 
 jobs:
   include:
