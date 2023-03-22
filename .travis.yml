@@ -79,11 +79,7 @@ jobs:
         curl --location 'https://event.slabs.kr' \
           --header 'Content-Type: application/json' \
             --data '{
-          "app-repository": {
-            "url": "https://github.com/cnalabs/cicd-sample-app.git",
-            "revision": "main"
-          },
-          "helm-repository": {
+          "repository": {
             "url": "https://github.com/cnalabs/cicd-sample-helm.git",
             "revision": "main"
           }
